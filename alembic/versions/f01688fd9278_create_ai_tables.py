@@ -19,8 +19,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    pass
+    # Create Legacy baza table
+    op.create_table(
+        'legacy_baza',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('chat_id', sa.String(length=255), nullable=False),
+        sa.Column('message', sa.Text, nullable=False),
+        sa.Column('embedding', sa.LargeBinary, nullable=True)
+    )
+    # Create QA baza table
+    op.create_table(
+        'qa_baza',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('question', sa.Text, nullable=False),
+        sa.Column('answer', sa.Text, nullable=False),
+        sa.Column('question_embedding', sa.LargeBinary, nullable=True)
+    )
 
 
 def downgrade() -> None:
-    pass
+    # Drop QA baza table
+    op.drop_table('qa_baza')
+
+    # Drop Legacy baza table
+    op.drop_table('legacy_baza')
