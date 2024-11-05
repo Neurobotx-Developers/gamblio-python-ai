@@ -3,11 +3,16 @@ from dotenv import load_dotenv
 
 from time import sleep
 import time
+import os
 
 
 
 load_dotenv()
-api_key = ""
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    raise ValueError("API key is not set. Please check your .env file.")
+
 client = OpenAI(api_key=api_key)
 
 global_assistant={}
