@@ -70,9 +70,17 @@ def create_thread():
     return thread
 
 
-def add_message_to_thread(thread_id, role, content):
+def add_message_to_thread(thread_id, role, content, knowledge):
+    formatted_content = f"""
+    Odgovori na pitanje: {content}.
 
-    message = client.beta.threads.messages.create(thread_id, role=role, content=content)
+    Možda ti ovo znanje može pomoći: '''
+    {knowledge}
+    '''
+    """
+    message = client.beta.threads.messages.create(
+        thread_id, role=role, content=formatted_content
+    )
     return message
 
 

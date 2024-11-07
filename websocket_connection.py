@@ -6,9 +6,10 @@ import websockets
 from sqlalchemy import create_engine, text
 import os
 from openai import OpenAI
+from embeddings import calculate_embedding
+from database import DB_ENGINE
 
-# DB_ENGINE = create_engine('your_database_url')
-# DB_CONNECTION = DB_ENGINE.connect()
+DB_CONNECTION = DB_ENGINE.connect()
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 from app import create_assistant, create_thread, add_message_to_thread, run_assistant
@@ -30,20 +31,30 @@ async def receive(websocket):
     return response
 
 
-def search_qa_db(question):
-    # query = text("SELECT question, answer FROM qa WHERE question_embedding <-> '{}' < :similarity ORDER BY embedding <-> '{}';")
+def search_qa_table(question):
+    embedding = calculate_embedding(question)
 
-    # Execute the query
-    # result = DB_CONNECTION.execute(query, similarity=0.5)
+    query = text(
+        f"SELECT question, answer FROM qa WHERE question_embedding <-> '{embedding}' < :similarity ORDER BY question_embedding <-> '{embedding}';"
+    )
 
-    # Fetch all results
-    # rows = result.fetchall()
+    result = DB_CONNECTION.execute(query, {"similarity": 0.5})
 
-    pass
+    rows = result.fetchall()
+
+    result = "\n"
+    for row in rows:
+        question, answer = row
+
+        result += f"# Pitanje: {question}\n"
+        result += f"Odgovor: {answer}\n"
+        result += "--------------\n"
+
+    result += "\n"
+    return result
 
 
 def reformat_answer(answer):
-
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -101,12 +112,58 @@ def reformat_answer(answer):
     return completion.choices[0].message.content
 
 
-def get_openai_response(question):
+def search_legacy_table(question):
+    embedding = calculate_embedding(question)
 
+    query = text(
+        f"""
+        SELECT * FROM (
+            SELECT DISTINCT ON (chat_id) *, (embedding <-> '{embedding}') as distance
+            FROM legacy
+        )
+        WHERE distance < :similarity
+        ORDER BY distance
+        LIMIT 2;
+        """
+    )
+
+    result = DB_CONNECTION.execute(query, {"similarity": 0.5})
+
+    rows = result.fetchall()
+
+    result = "\n"
+    i = 1
+    for row in rows:
+        chat_id = row[0]
+
+        query = text(
+            f"""
+                SELECT id, message, chat_id FROM legacy
+                WHERE chat_id = {chat_id}
+                ORDER BY id DESC;
+            """
+        )
+
+        message_rows = DB_CONNECTION.execute(query).fetchall()
+
+        result += "# Chat {i}\n"
+        for message_row in message_rows:
+            (_, message, _) = message_row
+            result += f"{message}\n"
+        result += "--------------\n"
+
+        i += 1
+
+    result += "\n"
+    return result
+
+
+def get_openai_response(question):
     # Ispod izvuci poruke iz legacy baze i proslijedit ih u create thread kao param
     thread = create_thread()
 
-    add_message_to_thread(thread.id, "user", question)
+    knowledge = search_legacy_table(question)
+    add_message_to_thread(thread.id, "user", question, knowledge)
 
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
 
@@ -128,7 +185,7 @@ def get_openai_response(question):
 async def connect_and_communicate():
 
     async with websockets.connect(WEBSOCKET_URL) as websocket:
-        await send(websocket, {"tag": "bot_subscribe", "chat_id": 205})
+        await send(websocket, {"tag": "bot_subscribe", "chat_id": 349})
 
         while True:
             received = await receive(websocket)
@@ -137,15 +194,17 @@ async def connect_and_communicate():
 
             question = received["text"]
 
-            if answer != None:
+            answer = search_qa_table(question)
+            print(f"QA ANSWER: {answer}")
+            if answer.strip() != "":
                 answer = reformat_answer(answer)
+                print(f"FORMATTED QA ANSWER: {answer}")
             else:
-
                 answer = get_openai_response(question)
+                print(f"OPENAI ANSWER: {answer}")
 
-            await send(websocket, {"tag": "bot_send", "chat_id": 205, "text": answer})
+            await send(websocket, {"tag": "bot_send", "chat_id": 349, "text": answer})
 
 
 # Run the client connection
-# asyncio.run(connect_and_communicate())
 asyncio.get_event_loop().run_until_complete(connect_and_communicate())
