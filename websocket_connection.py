@@ -1,7 +1,6 @@
 from websockets.sync.client import connect
 import json
 from config import WEBSOCKET_URL
-import asyncio
 import websockets
 from sqlalchemy import create_engine, text
 import os
@@ -182,10 +181,9 @@ def get_openai_response(question):
     return messages.data[0].content[0].text.value
 
 
-async def connect_and_communicate():
-
+async def connect_and_communicate(chat_id):
     async with websockets.connect(WEBSOCKET_URL) as websocket:
-        await send(websocket, {"tag": "bot_subscribe", "chat_id": 349})
+        await send(websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
 
         while True:
             received = await receive(websocket)
@@ -203,8 +201,6 @@ async def connect_and_communicate():
                 answer = get_openai_response(question)
                 print(f"OPENAI ANSWER: {answer}")
 
-            await send(websocket, {"tag": "bot_send", "chat_id": 349, "text": answer})
-
-
-# Run the client connection
-asyncio.get_event_loop().run_until_complete(connect_and_communicate())
+            await send(
+                websocket, {"tag": "bot_send", "chat_id": chat_id, "text": answer}
+            )
