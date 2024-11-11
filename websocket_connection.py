@@ -43,7 +43,7 @@ async def connect_and_communicate(chat_id):
                 {
                     "tag": "bot_send",
                     "chat_id": chat_id,
-                    "text": daemon_response.data.answer,
-                    "source": daemon_response.source,
+                    "text": daemon_response["data"]["answer"],
+                    "source": daemon_response["source"],
                 },
             )
