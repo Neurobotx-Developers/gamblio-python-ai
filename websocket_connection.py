@@ -33,7 +33,7 @@ async def connect_and_communicate(chat_id):
             daemon_websocket.send(json.dumps({"question": question}))
             daemon_response = json.loads(daemon_websocket.recv())
 
-            if daemon_response.data.sure == False:
+            if daemon_response["data"]["sure"] == False:
                 await send(
                     django_websocket, {"tag": "bot_cannot_answer", "chat_id": chat_id}
                 )
