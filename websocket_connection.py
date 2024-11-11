@@ -38,6 +38,8 @@ async def connect_and_communicate(chat_id):
                     django_websocket, {"tag": "bot_cannot_answer", "chat_id": chat_id}
                 )
 
+                break
+
             await send(
                 django_websocket,
                 {
