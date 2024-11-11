@@ -30,7 +30,7 @@ async def connect_and_communicate(chat_id):
 
             question = received_django["text"]
 
-            await daemon_websocket.send(json.dumps({question}))
+            await daemon_websocket.send(json.dumps({"question": question}))
             daemon_response = json.loads(await daemon_websocket.recv())
 
             if daemon_response.data.sure == False:
