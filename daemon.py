@@ -5,7 +5,7 @@ import time
 
 from config import CONFIG
 import websockets
-from sqlalchemy import  text
+from sqlalchemy import text
 from openai import OpenAI
 from embeddings import calculate_embedding
 from database import DB_ENGINE
@@ -18,8 +18,6 @@ import time
 
 global assistant
 assistant = create_assistant()
-
-
 
 
 def search_qa_table(question):
@@ -173,24 +171,25 @@ def get_openai_response(question):
     return messages.data[0].content[0].text.value
 
 
-
-
-
-
 # Create a queue for incoming messages
 message_queue = Queue()
 
+
 # A placeholder function simulating a long processing task for each message
 async def process_message(message):
-    answer = search_qa_table(message)  # Changed 'question' to 'message' to match the parameter
+    answer = search_qa_table(
+        message
+    )  # Changed 'question' to 'message' to match the parameter
     print(f"QA ANSWER: {answer}")
     if answer.strip() != "":
         answer = reformat_answer(answer)
         print(f"FORMATTED QA ANSWER: {answer}")
     else:
-        answer = get_openai_response(message)  # Changed 'question' to 'message' to match the parameter
-        return answer
+        answer = get_openai_response(
+            message
+        )  # Changed 'question' to 'message' to match the parameter
 
+    return answer
 
 
 # Background task to handle the processing queue
@@ -204,12 +203,14 @@ async def handle_queue():
         else:
             await asyncio.sleep(0.1)  # Avoid busy waiting
 
+
 # Handler for each WebSocket client connection
 async def client_handler(websocket, path):
     async for message in websocket:
         print(f"Received message: {message}")
         # Enqueue the message along with the websocket reference
         message_queue.put((websocket, message))
+
 
 # Start the WebSocket server
 async def main():
@@ -220,6 +221,7 @@ async def main():
     async with websockets.serve(client_handler, "localhost", 8765):
         print("Server started on ws://localhost:8765")
         await asyncio.Future()  # Run forever
+
 
 # Run the main function
 asyncio.run(main())
