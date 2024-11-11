@@ -1,7 +1,3 @@
-import os
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
-load_dotenv()
-
-WEBSOCKET_URL = os.getenv("WEBSOCKET_URL")
-print(WEBSOCKET_URL)
+CONFIG = dotenv_values(".env")

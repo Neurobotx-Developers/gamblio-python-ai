@@ -1,15 +1,14 @@
 from websockets.sync.client import connect
 import json
-from config import WEBSOCKET_URL
+from config import CONFIG
 import websockets
 from sqlalchemy import create_engine, text
-import os
 from openai import OpenAI
 from embeddings import calculate_embedding
 from database import DB_ENGINE
 
 DB_CONNECTION = DB_ENGINE.connect()
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = CONFIG["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
 from app import create_assistant, create_thread, add_message_to_thread, run_assistant
 import time
@@ -182,7 +181,7 @@ def get_openai_response(question):
 
 
 async def connect_and_communicate(chat_id):
-    async with websockets.connect(WEBSOCKET_URL) as websocket:
+    async with websockets.connect(CONFIG["WEBSOCKET_URL"]) as websocket:
         await send(websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
 
         while True:

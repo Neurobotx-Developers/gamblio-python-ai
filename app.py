@@ -1,15 +1,13 @@
 from openai import OpenAI
-from dotenv import load_dotenv
+from config import CONFIG
 
 from time import sleep
 import time
-import os
 import tracemalloc
 
 tracemalloc.start()
 
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = CONFIG["OPENAI_API_KEY"]
 
 if not api_key:
     raise ValueError("API key is not set. Please check your .env file.")

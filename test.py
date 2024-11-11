@@ -1,9 +1,9 @@
 from openai import OpenAI
-import os
+from config import CONFIG
 
 # DB_ENGINE = create_engine('your_database_url')
 # DB_CONNECTION = DB_ENGINE.connect()
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = CONFIG["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
 
 question = input("Postavite pitanje: ")
