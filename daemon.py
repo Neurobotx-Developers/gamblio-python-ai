@@ -179,7 +179,7 @@ message_queue = Queue()
 
 
 # A placeholder function simulating a long processing task for each message
-def process_message(message):
+def process_message(message, websocket):
     source = "vector"
     answer = search_qa_table(
         message
@@ -192,7 +192,9 @@ def process_message(message):
         source = "ai"
         answer = json.loads(get_openai_response(message))
 
-    return json.dumps({"source": source, "data": answer})
+    result = json.dumps({"source": source, "data": answer})
+
+    asyncio.run(websocket.send(result))
 
 
 # Background task to handle the processing queue
@@ -201,8 +203,8 @@ async def handle_queue():
         if not message_queue.empty():
             # Get the next message and its websocket to respond to
             websocket, message = message_queue.get()
-            result = await THREAD_POOL_EXECUTOR.submit(process_message, message)
-            await websocket.send(result)
+
+            THREAD_POOL_EXECUTOR.submit(process_message, message, websocket)
         else:
             await asyncio.sleep(0.1)  # Avoid busy waiting
 
@@ -212,8 +214,8 @@ async def client_handler(websocket, path):
     try:
         async for message in websocket:
             print(f"Received message: {message}")
-            # Enqueue the message along with the websocket reference
             message_queue.put((websocket, message))
+
     except websockets.exceptions.ConnectionClosedError:
         print("Client disconnected")
     except Exception as e:
