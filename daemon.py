@@ -206,10 +206,15 @@ async def handle_queue():
 
 # Handler for each WebSocket client connection
 async def client_handler(websocket, path):
-    async for message in websocket:
-        print(f"Received message: {message}")
-        # Enqueue the message along with the websocket reference
-        message_queue.put((websocket, message))
+    try:
+        async for message in websocket:
+            print(f"Received message: {message}")
+            # Enqueue the message along with the websocket reference
+            message_queue.put((websocket, message))
+    except websockets.exceptions.ConnectionClosedError:
+        print("Client disconnected")
+    except Exception as e:
+        print(f"Error in connection handler: {e}")
 
 
 # Start the WebSocket server
