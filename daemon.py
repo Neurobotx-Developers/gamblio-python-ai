@@ -183,7 +183,7 @@ async def process_message(message):
     )  # Changed 'question' to 'message' to match the parameter
     print(f"QA ANSWER: {answer}")
     if answer.strip() != "":
-        answer = reformat_answer(answer)
+        answer = json.loads(reformat_answer(answer))
         print(f"FORMATTED QA ANSWER: {answer}")
     else:
         source = "ai"
