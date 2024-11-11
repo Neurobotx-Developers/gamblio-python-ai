@@ -9,6 +9,9 @@ from sqlalchemy import text
 from openai import OpenAI
 from embeddings import calculate_embedding
 from database import DB_ENGINE
+from concurrent.futures import ThreadPoolExecutor
+
+THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=2)
 
 DB_CONNECTION = DB_ENGINE.connect()
 api_key = CONFIG["OPENAI_API_KEY"]
@@ -176,7 +179,7 @@ message_queue = Queue()
 
 
 # A placeholder function simulating a long processing task for each message
-async def process_message(message):
+def process_message(message):
     source = "vector"
     answer = search_qa_table(
         message
@@ -198,7 +201,7 @@ async def handle_queue():
         if not message_queue.empty():
             # Get the next message and its websocket to respond to
             websocket, message = message_queue.get()
-            result = await process_message(message)
+            result = await THREAD_POOL_EXECUTOR.submit(process_message, message)
             await websocket.send(result)
         else:
             await asyncio.sleep(0.1)  # Avoid busy waiting
