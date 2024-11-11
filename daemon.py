@@ -2,11 +2,10 @@ import asyncio
 import websockets
 from queue import Queue
 import time
-from websockets.sync.client import connect
-import json
+
 from config import CONFIG
 import websockets
-from sqlalchemy import create_engine, text
+from sqlalchemy import  text
 from openai import OpenAI
 from embeddings import calculate_embedding
 from database import DB_ENGINE
