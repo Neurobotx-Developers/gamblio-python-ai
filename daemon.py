@@ -1,3 +1,7 @@
+import asyncio
+import websockets
+from queue import Queue
+import time
 from websockets.sync.client import connect
 import json
 from config import CONFIG
@@ -17,16 +21,6 @@ global assistant
 assistant = create_assistant()
 
 
-async def send(websocket, message):
-    await websocket.send(json.dumps(message))
-    print(f"Sent: {message}")
-
-
-async def receive(websocket):
-    response = json.loads(await websocket.recv())
-    print(f"Received: {response}")
-
-    return response
 
 
 def search_qa_table(question):
@@ -180,34 +174,53 @@ def get_openai_response(question):
     return messages.data[0].content[0].text.value
 
 
-async def connect_and_communicate(chat_id):
-    async with websockets.connect(CONFIG["WEBSOCKET_URL"]) as websocket:
-        await send(websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
-        daemonUri = "ws://localhost:8765"
-        daemon_websocket = websocket.create_connection(daemonUri)
-        print("Connected to Daemon server")  
 
 
-        while True:
-            received_django = await receive(websocket)
-            if not "text" in received_django:
-                continue
-
-            question = received_django["text"]
-
-            
-            await daemon_websocket.send(json.dumps({ question }))
-            daemon_response = json.loads(await daemon_websocket.recv())
-
-            if daemon_response.data.sure == False:
-                await send(websocket, {"tag": "bot_cannot_answer", "chat_id": chat_id})
-            
-
-            await send(
-                websocket, {"tag": "bot_send", "chat_id": chat_id, "text": daemon_response.data.answer, "source":daemon_response.source}
-            )
 
 
-       
+# Create a queue for incoming messages
+message_queue = Queue()
 
-           
+# A placeholder function simulating a long processing task for each message
+async def process_message(message):
+    answer = search_qa_table(message)  # Changed 'question' to 'message' to match the parameter
+    print(f"QA ANSWER: {answer}")
+    if answer.strip() != "":
+        answer = reformat_answer(answer)
+        print(f"FORMATTED QA ANSWER: {answer}")
+    else:
+        answer = get_openai_response(message)  # Changed 'question' to 'message' to match the parameter
+        return answer
+
+
+
+# Background task to handle the processing queue
+async def handle_queue():
+    while True:
+        if not message_queue.empty():
+            # Get the next message and its websocket to respond to
+            websocket, message = message_queue.get()
+            result = await process_message(message)
+            await websocket.send(result)
+        else:
+            await asyncio.sleep(0.1)  # Avoid busy waiting
+
+# Handler for each WebSocket client connection
+async def client_handler(websocket, path):
+    async for message in websocket:
+        print(f"Received message: {message}")
+        # Enqueue the message along with the websocket reference
+        message_queue.put((websocket, message))
+
+# Start the WebSocket server
+async def main():
+    # Start the background queue processing task
+    asyncio.create_task(handle_queue())
+
+    # Run the WebSocket server
+    async with websockets.serve(client_handler, "localhost", 8765):
+        print("Server started on ws://localhost:8765")
+        await asyncio.Future()  # Run forever
+
+# Run the main function
+asyncio.run(main())
