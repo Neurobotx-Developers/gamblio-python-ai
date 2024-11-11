@@ -2,7 +2,7 @@ import asyncio
 import websockets
 from queue import Queue
 import time
-
+import json
 from config import CONFIG
 import websockets
 from sqlalchemy import text
@@ -177,19 +177,19 @@ message_queue = Queue()
 
 # A placeholder function simulating a long processing task for each message
 async def process_message(message):
+    source = "vector"
     answer = search_qa_table(
         message
     )  # Changed 'question' to 'message' to match the parameter
     print(f"QA ANSWER: {answer}")
     if answer.strip() != "":
-        answer = reformat_answer(answer)
+        answer = {"sure": True, "answer": reformat_answer(answer)}
         print(f"FORMATTED QA ANSWER: {answer}")
     else:
-        answer = get_openai_response(
-            message
-        )  # Changed 'question' to 'message' to match the parameter
+        source = "ai"
+        answer = json.loads(get_openai_response(message))
 
-    return answer
+    return json.dumps({"source": source, "data": answer})
 
 
 # Background task to handle the processing queue
