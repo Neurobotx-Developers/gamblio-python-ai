@@ -11,7 +11,7 @@ from embeddings import calculate_embedding
 from database import DB_ENGINE
 from concurrent.futures import ThreadPoolExecutor
 
-THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=2)
+THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
 api_key = CONFIG["OPENAI_API_KEY"]
