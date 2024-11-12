@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy import URL
 from config import CONFIG
 
-# TODO fill data from .env
 url_object = URL.create(
     "postgresql",
     username=CONFIG["DB_USERNAME"],
@@ -12,3 +11,5 @@ url_object = URL.create(
     port=5432,
 )
 DB_ENGINE = create_engine(url_object)
+
+

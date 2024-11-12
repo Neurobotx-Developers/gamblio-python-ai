@@ -10,7 +10,7 @@ from openai import OpenAI
 from embeddings import calculate_embedding
 from database import DB_ENGINE
 from concurrent.futures import ThreadPoolExecutor
-
+from caluculate_cost import calculate_openai_cost
 THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
@@ -21,6 +21,8 @@ import time
 
 global assistant
 assistant = create_assistant()
+
+
 
 
 def search_qa_table(question):
@@ -101,7 +103,7 @@ def reformat_answer(answer):
         ],
     )
 
-    return completion.choices[0].message.content
+    return completion
 
 
 def search_legacy_table(question):
@@ -158,7 +160,8 @@ def get_openai_response(question):
     add_message_to_thread(thread.id, "user", question, knowledge)
 
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
-
+    input_tokens = run.usage.prompt_tokens 
+    output_tokens = run.usage.completion_tokens
     timeout = 60  # seconds
     start_time = time.time()
 
@@ -170,8 +173,8 @@ def get_openai_response(question):
         run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
 
     messages = client.beta.threads.messages.list(thread_id=thread.id)
-    print(messages.data[0].content[0].text.value)
-    return messages.data[0].content[0].text.value
+    return {"answer":messages.data[0].content[0].text.value, "input_tokens":input_tokens, "output_tokens":output_tokens}
+    
 
 
 # Create a queue for incoming messages
@@ -180,22 +183,32 @@ message_queue = Queue()
 
 # A placeholder function simulating a long processing task for each message
 def process_message(message, websocket):
+    input_tokens=0
+    output_tokens = 0
     source = "vector"
     answer = search_qa_table(
         message
     )  # Changed 'question' to 'message' to match the parameter
     print(f"QA ANSWER: {answer}")
     if answer.strip() != "":
-        answer = json.loads(reformat_answer(answer))
-        print(f"FORMATTED QA ANSWER: {answer}")
+        response = reformat_answer(answer)
+        answer = json.loads(response.choices[0].message.content)
+        input_tokens= response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
     else:
         source = "ai"
-        answer = json.loads(get_openai_response(message))
+        response =get_openai_response(message)
+        answer = json.loads(response["answer"])
+        input_tokens = response["input_tokens"]
+        output_tokens=response["output_tokens"]
 
-    result = json.dumps({"source": source, "data": answer})
+
+    calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
+    result = json.dumps({"source": source, "cost":calculated_cost, "data": answer})
 
     asyncio.run(websocket.send(result))
 
+    #TODO:ISPOD TREBA DODATI UPISIVANJE COSTOVA U BAZU
 
 # Background task to handle the processing queue
 async def handle_queue():
