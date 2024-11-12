@@ -128,7 +128,7 @@ def search_legacy_table(question):
     result = "\n"
     i = 1
     for row in rows:
-        chat_id = row[0]
+        chat_id = row[1]
 
         query = text(
             f"""
@@ -140,10 +140,11 @@ def search_legacy_table(question):
 
         message_rows = DB_CONNECTION.execute(query).fetchall()
 
-        result += "# Chat {i}\n"
+        result += f"# Chat {i}\n"
         for message_row in message_rows:
             (_, message, _) = message_row
-            result += f"{message}\n"
+            result += message
+            result += "\n"
         result += "--------------\n"
 
         i += 1
@@ -157,6 +158,10 @@ def get_openai_response(question):
     thread = create_thread()
 
     knowledge = search_legacy_table(question)
+    print("===== KNOWLEDGE START =====")
+    print(knowledge)
+    print("=====  KNOWLEDGE END  =====")
+
     add_message_to_thread(thread.id, "user", question, knowledge)
 
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
