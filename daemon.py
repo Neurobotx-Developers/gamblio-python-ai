@@ -126,7 +126,7 @@ def search_legacy_table(question):
     result = "\n"
     i = 1
     for row in rows:
-        chat_id = row[0]
+        chat_id = row[1]
 
         query = text(
             f"""
