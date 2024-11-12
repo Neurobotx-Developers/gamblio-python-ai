@@ -155,6 +155,10 @@ def get_openai_response(question):
     thread = create_thread()
 
     knowledge = search_legacy_table(question)
+    print("===== KNOWLEDGE START =====")
+    print(knowledge)
+    print("=====  KNOWLEDGE END  =====")
+
     add_message_to_thread(thread.id, "user", question, knowledge)
 
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
