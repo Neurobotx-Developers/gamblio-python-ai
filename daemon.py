@@ -172,6 +172,7 @@ def get_openai_response(question):
     start_time = time.time()
     print(run)
     while run.status != "completed":
+        print("retarde")
         if time.time() - start_time > timeout:
             return {"sure": "false", "answer": ""}
         print("Waiting for the run to complete...")
