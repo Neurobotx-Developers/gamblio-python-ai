@@ -200,12 +200,14 @@ def process_message(message, websocket):
     if answer.strip() != "":
         response = reformat_answer(answer)
         answer = json.loads(response.choices[0].message.content)
+        print(response)
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
     else:
         source = "ai"
         response = get_openai_response(message)
         answer = json.loads(response["answer"])
+        print(response)
         input_tokens = response["input_tokens"]
         output_tokens = response["output_tokens"]
 
