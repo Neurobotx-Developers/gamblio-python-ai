@@ -162,8 +162,10 @@ def get_openai_response(question):
     print("=====  KNOWLEDGE END  =====")
 
     add_message_to_thread(thread.id, "user", question, knowledge)
-
+    print("Posle add_message_to_thread funkcije")
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
+    print("Posle run_assistant funkcije")
+
     input_tokens = run.usage.prompt_tokens
     output_tokens = run.usage.completion_tokens
     timeout = 60  # seconds
@@ -175,8 +177,12 @@ def get_openai_response(question):
         print("Waiting for the run to complete...")
         time.sleep(1)
         run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+        print("Posle kreiranja run-a")
+
 
     messages = client.beta.threads.messages.list(thread_id=thread.id)
+    print("Posle povlacenja liste poruka")
+
     return {
         "answer": messages.data[0].content[0].text.value,
         "input_tokens": input_tokens,
