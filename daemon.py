@@ -170,16 +170,15 @@ def get_openai_response(question):
     output_tokens = run.usage.completion_tokens
     timeout = 60  # seconds
     start_time = time.time()
-    print(run)
+
     while run.status != "completed":
-        print("retarde")
+        print(f"run status: {run.status}")
         if time.time() - start_time > timeout:
             return {"sure": "false", "answer": ""}
         print("Waiting for the run to complete...")
         time.sleep(1)
         run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
         print("Posle kreiranja run-a")
-
 
     messages = client.beta.threads.messages.list(thread_id=thread.id)
     print("Posle povlacenja liste poruka")
