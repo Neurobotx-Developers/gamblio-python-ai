@@ -171,7 +171,7 @@ def get_openai_response(question):
     timeout = 60  # seconds
     start_time = time.time()
 
-    while True:
+    while run.status != "completed":
         print(f"run status: {run.status}")
         if time.time() - start_time > timeout:
             return {"sure": "false", "answer": ""}
