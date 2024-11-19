@@ -68,13 +68,13 @@ def create_thread():
     return thread
 
 
-def add_message_to_thread(thread_id, role, content, knowledge):
+def add_message_to_thread(thread_id, role, content, knowledge, messages_array):
     formatted_content = f"""
     Odgovori na pitanje: {content}.
 
-    Možda ti ovo znanje može pomoći: '''
-    {knowledge}
-    '''
+    Možda ti ovo znanje može pomoći: '''{knowledge} '''
+    
+    Ovo je vaša istorija komunikacije: '''{messages_array}'''
     """
     message = client.beta.threads.messages.create(
         thread_id, role=role, content=formatted_content
@@ -87,6 +87,7 @@ def run_assistant(thread_id, assistant_id, instructions):
     run = client.beta.threads.runs.create(
         thread_id=thread_id,
         assistant_id=assistant_id,
+        
         additional_instructions="Daj kratke i precizne odgovore. Koristi ijekavski dijalekt crnogorskog jezika. Nikada ne pominji fajl znanja.",
         instructions=f'{instructions} + \'Format odgovora u JSON-u: {{"sure":true - ako si siguran da mozes dati validan odgovor. / false - ako mislis da na pitanje treba odgovoriti korisnicka podrska, "answer":"" - ako mislis da na to pitanje treba odgovoriti korisnicka podrska/"ili neki tekst ukoliko si nasao odgovor u bazi znanja"}} --- UVJEK ISTRAZI FAJL ZNANJA PRIJE NEGO ODGOVORIS\'',
     )

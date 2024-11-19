@@ -8,13 +8,18 @@ import websockets
 from sqlalchemy import text
 from openai import OpenAI
 from embeddings import calculate_embedding
-from database import DB_ENGINE
+from database import DB_ENGINE, CHAT_DB_ENGINE
 from concurrent.futures import ThreadPoolExecutor
 from caluculate_cost import calculate_openai_cost
 
 THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
+
+#db za chatove u realnom vremenu
+CHAT_DB_CONNECTION = CHAT_DB_ENGINE.connect()
+
+
 api_key = CONFIG["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
 from app import create_assistant, create_thread, add_message_to_thread, run_assistant
@@ -47,7 +52,18 @@ def search_qa_table(question):
     return result
 
 
-def reformat_answer(answer):
+def reformat_answer(answer, chat_id):
+    query = text(
+        f"""
+        SELECT message FROM messages
+        WHERE id = {chat_id}
+        ORDER BY timestamp ASC;
+        """
+    )
+    messages_rows = CHAT_DB_CONNECTION.execute(query, {"id": chat_id}).fetchall()
+    messages_array = [row[0] for row in messages_rows]  # Convert to array
+    print("Fetched messages in format function:", messages_array)  # Debug print
+    
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -59,9 +75,18 @@ def reformat_answer(answer):
                 "role": "user",
                 "content": 'Vi ste korisnički asistent za Admiral Bet Crna Gora, valuta je evro i govorite ijekavicom. Vaš zadatak je da promovišete Admiral Bet i njegove igre i iskljucivo odgovarate na pitanja vezana za Admiral Bet i njegove igre, te da pomažete korisnicima kao da ste stvarna osoba iz korisničke podrške. Nikada ne pominjete druge kladionice. Json odgovor. Format odgovora u JSON-u: {{"sure":true - ako si siguran da mozes dati validan odgovor. / false - ako mislis da na pitanje treba odgovoriti korisnicka podrska, "answer":"" - ako mislis da na to pitanje treba odgovoriti korisnicka podrska/"ili neki tekst ukoliko si nasao odgovor u bazi znanja"}}',
             },
+            
             {
                 "role": "system",
                 "content": "U redu, shvatam. Imate li dodatne instrukcije za moje buduce ponasanje?",
+            },
+               {
+                "role": "user",
+                "content": f"Ovo je vaša istorija razgovora: '''{messages_array}'''",
+            }, 
+            {
+                "role": "system",
+                "content": "U redu, shvatam. Iskoristicu nase prethodne poruke kako bih davao smislene odgovore. Imate li dodatne instrukcije za moje buduce ponasanje?",
             },
             {
                 "role": "user",
@@ -152,17 +177,29 @@ def search_legacy_table(question):
     return result
 
 
-def get_openai_response(question):
-    # Ispod izvuci poruke iz legacy baze i proslijedit ih u create thread kao param
+def get_openai_response(question, chat_id):
     thread = create_thread()
 
     knowledge = search_legacy_table(question)
-    print("===== KNOWLEDGE START =====")
-    print(knowledge)
-    print("=====  KNOWLEDGE END  =====")
 
-    add_message_to_thread(thread.id, "user", question, knowledge)
-    print("Posle add_message_to_thread funkcije")
+    query = text(
+        f"""
+        SELECT message FROM messages
+        WHERE id = {chat_id}
+        ORDER BY timestamp ASC;
+        """
+    )
+    messages_rows = CHAT_DB_CONNECTION.execute(query, {"id": chat_id}).fetchall()
+    messages_array = [row[0] for row in messages_rows]  # Convert to array
+    print("Fetched messages:", messages_array)  # Debug print
+    
+
+
+    add_message_to_thread(thread.id, "user", question, knowledge, messages_array)
+    
+    # New code to fetch messages from CHAT DB based on chat_id
+    
+
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
     timeout = 60  # seconds
     start_time = time.time()
@@ -193,7 +230,7 @@ message_queue = Queue()
 
 
 # A placeholder function simulating a long processing task for each message
-def process_message(message, websocket):
+def process_message(message, websocket, chat_id):
     input_tokens = 0
     output_tokens = 0
     source = "vector"
@@ -202,14 +239,14 @@ def process_message(message, websocket):
     )  # Changed 'question' to 'message' to match the parameter
     print(f"QA ANSWER: {answer}")
     if answer.strip() != "":
-        response = reformat_answer(answer)
+        response = reformat_answer(answer, chat_id)
         answer = json.loads(response.choices[0].message.content)
         print(response)
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
     else:
         source = "ai"
-        response = get_openai_response(message)
+        response = get_openai_response(message, chat_id)
         answer = json.loads(response["answer"])
         print(response)
         input_tokens = response["input_tokens"]
@@ -226,9 +263,9 @@ async def handle_queue():
     while True:
         if not message_queue.empty():
             # Get the next message and its websocket to respond to
-            websocket, message = message_queue.get()
+            websocket, message, chat_id = message_queue.get()
 
-            THREAD_POOL_EXECUTOR.submit(process_message, message, websocket)
+            THREAD_POOL_EXECUTOR.submit(process_message, message, websocket, chat_id)
         else:
             await asyncio.sleep(0.1)  # Avoid busy waiting
 
@@ -238,7 +275,12 @@ async def client_handler(websocket, path):
     try:
         async for message in websocket:
             print(f"Received message: {message}")
-            message_queue.put((websocket, message))
+            # Assuming message format is JSON and contains 'chat_id'
+            message_data = json.loads(message)  # Parse the message
+            chat_id = message_data.get("chat_id")  # Extract chat_id
+            message_content = message_data.get("content")  # Extract the actual message content
+            
+            message_queue.put((websocket, message_content, chat_id))  # Pass chat_id to the queue
 
     except websockets.exceptions.ConnectionClosedError:
         print("Client disconnected")
