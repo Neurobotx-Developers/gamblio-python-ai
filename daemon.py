@@ -60,14 +60,15 @@ def reformat_answer(answer, chat_id):
         ORDER BY timestamp ASC;
         """
     )
-    messages_rows = CHAT_DB_CONNECTION.execute(query, {"id": chat_id}).fetchall()
-    
+    print(query)
+    messages_rows = CHAT_DB_CONNECTION.execute(query).fetchall()
+    print(messages_rows)
     # Convert to array
     messages_array = [row[0] for row in messages_rows]  # Convert to array
     print("Fetched messages in format function:", messages_array)  # Debug print
     
     # Ensure messages_array is JSON serializable
-    messages_array = [str(message) for message in messages_array]  # Convert to string if necessary
+    messages_array = [str(message) for message in messages_array]  
     
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
