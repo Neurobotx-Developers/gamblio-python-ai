@@ -164,8 +164,6 @@ def get_openai_response(question):
     add_message_to_thread(thread.id, "user", question, knowledge)
 
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
-    input_tokens = run.usage.prompt_tokens
-    output_tokens = run.usage.completion_tokens
     timeout = 60  # seconds
     start_time = time.time()
 
@@ -175,6 +173,9 @@ def get_openai_response(question):
         print("Waiting for the run to complete...")
         time.sleep(1)
         run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+
+    input_tokens = run.usage.prompt_tokens
+    output_tokens = run.usage.completion_tokens
 
     messages = client.beta.threads.messages.list(thread_id=thread.id)
     return {
