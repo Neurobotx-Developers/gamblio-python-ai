@@ -1,5 +1,4 @@
 from sentence_transformers import SentenceTransformer
-
 EMBEDDING_MODEL = SentenceTransformer(
     "sentence-transformers/distiluse-base-multilingual-cased-v2"
 )

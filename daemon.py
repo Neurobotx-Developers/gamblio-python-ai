@@ -162,12 +162,13 @@ def get_openai_response(question):
     print("=====  KNOWLEDGE END  =====")
 
     add_message_to_thread(thread.id, "user", question, knowledge)
-
+    print("Posle add_message_to_thread funkcije")
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
     timeout = 60  # seconds
     start_time = time.time()
 
     while run.status != "completed":
+        print(f"run status: {run.status}")
         if time.time() - start_time > timeout:
             return {"sure": "false", "answer": ""}
         print("Waiting for the run to complete...")
@@ -178,6 +179,8 @@ def get_openai_response(question):
     output_tokens = run.usage.completion_tokens
 
     messages = client.beta.threads.messages.list(thread_id=thread.id)
+    print("Posle povlacenja liste poruka")
+
     return {
         "answer": messages.data[0].content[0].text.value,
         "input_tokens": input_tokens,
@@ -201,12 +204,14 @@ def process_message(message, websocket):
     if answer.strip() != "":
         response = reformat_answer(answer)
         answer = json.loads(response.choices[0].message.content)
+        print(response)
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
     else:
         source = "ai"
         response = get_openai_response(message)
         answer = json.loads(response["answer"])
+        print(response)
         input_tokens = response["input_tokens"]
         output_tokens = response["output_tokens"]
 

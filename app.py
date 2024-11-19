@@ -83,6 +83,7 @@ def add_message_to_thread(thread_id, role, content, knowledge):
 
 
 def run_assistant(thread_id, assistant_id, instructions):
+
     run = client.beta.threads.runs.create(
         thread_id=thread_id,
         assistant_id=assistant_id,
