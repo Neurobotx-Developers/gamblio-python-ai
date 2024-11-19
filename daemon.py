@@ -55,7 +55,7 @@ def search_qa_table(question):
 def reformat_answer(answer, chat_id):
     query = text(
         f"""
-        SELECT message FROM chat_message
+        SELECT content FROM chat_message
         WHERE id = {chat_id}
         ORDER BY timestamp ASC;
         """
@@ -190,7 +190,7 @@ def get_openai_response(question, chat_id):
 
     query = text(
         f"""
-        SELECT message FROM chat_message
+        SELECT content FROM chat_message
         WHERE id = {chat_id}
         ORDER BY timestamp ASC;
         """
