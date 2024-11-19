@@ -13,12 +13,10 @@ sentry_sdk.init(
 # Manually call start_profiler and stop_profiler
 # to profile the code in between
 sentry_sdk.profiler.start_profiler()
-division_by_zero = 1 / 0
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--chat_id", type=int, help="ID of the chat")
 
 args = parser.parse_args()
-
 
 asyncio.get_event_loop().run_until_complete(connect_and_communicate(args.chat_id))
