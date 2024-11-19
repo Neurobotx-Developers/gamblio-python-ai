@@ -2,7 +2,18 @@ import json
 from config import CONFIG
 import websockets
 from websocket import create_connection
+import sentry_sdk
 
+sentry_sdk.init(
+    dsn="https://37cac10e14a03768e2d7a64225aa7c6e@o4508318885019648.ingest.de.sentry.io/4508324683776080",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+)
+
+# Manually call start_profiler and stop_profiler
+# to profile the code in between
+sentry_sdk.profiler.start_profiler()
 
 async def send(websocket, message):
     await websocket.send(json.dumps(message))
