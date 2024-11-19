@@ -287,7 +287,7 @@ async def client_handler(websocket, path):
             # Assuming message format is JSON and contains 'chat_id'
             message_data = json.loads(message)  # Parse the message
             chat_id = message_data.get("chat_id")  # Extract chat_id
-            message_content = message_data.get("content")  # Extract the actual message content
+            message_content = message_data.get("question")  # Extract the actual message content
             
             message_queue.put((websocket, message_content, chat_id))  # Pass chat_id to the queue
 
