@@ -22,7 +22,7 @@ async def send_ping(websocket, interval=10):
     while True:
         try:
             print("sending ping")
-            await websocket.send(json.dumps({"ping": "ping"}))
+            websocket.send(json.dumps({"ping": "ping"}))
             await asyncio.sleep(interval)
         except Exception as e:
             print(f"Ping failed: {e}")
