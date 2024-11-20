@@ -17,32 +17,15 @@ async def receive(websocket):
     return response
 
 
-async def send_ping(websocket, interval=10):
-    """Send periodic ping frames to keep the WebSocket connection alive."""
-    while True:
-        try:
-            print("sending ping")
-            websocket.send(json.dumps({"ping": "ping"}))
-            await asyncio.sleep(interval)
-        except Exception as e:
-            print(f"Ping failed: {e}")
-            break
-
-
 async def connect_and_communicate(chat_id):
     async with websockets.connect(CONFIG["WEBSOCKET_URL"]) as django_websocket:
         await send(django_websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
         daemonUri = "ws://localhost:8765"
         daemon_websocket = create_connection(daemonUri)
-        ping_task = asyncio.create_task(send_ping(daemon_websocket))
         print("Connected to Daemon server")
 
         while True:
             received_django = await receive(django_websocket)
-
-            if "pong" in received_django:
-                print("got pong")
-                continue
 
             if not "text" in received_django:
                 continue
@@ -71,5 +54,3 @@ async def connect_and_communicate(chat_id):
                     "cost": daemon_response["cost"],
                 },
             )
-
-        ping_task.cancel()

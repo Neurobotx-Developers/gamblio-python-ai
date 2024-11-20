@@ -290,11 +290,6 @@ async def client_handler(websocket, path):
             # Assuming message format is JSON and contains 'chat_id'
             message_data = json.loads(message)  # Parse the message
 
-            if "ping" in message_data:
-                print("got ping, sending pong")
-                await websocket.send(json.dumps({"pong": "pong"}))
-                continue
-
             chat_id = message_data.get("chat_id")  # Extract chat_id
             message_content = message_data.get(
                 "question"
