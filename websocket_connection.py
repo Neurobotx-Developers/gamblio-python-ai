@@ -31,10 +31,10 @@ async def send_ping(websocket, interval=10):
 
 async def connect_and_communicate(chat_id):
     async with websockets.connect(CONFIG["WEBSOCKET_URL"]) as django_websocket:
-        ping_task = asyncio.create_task(send_ping(django_websocket))
         await send(django_websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
         daemonUri = "ws://localhost:8765"
         daemon_websocket = create_connection(daemonUri)
+        ping_task = asyncio.create_task(send_ping(daemon_websocket))
         print("Connected to Daemon server")
 
         while True:
