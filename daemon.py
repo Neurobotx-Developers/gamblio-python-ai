@@ -56,7 +56,7 @@ def reformat_answer(answer, chat_id):
     query = text(
         f"""
         SELECT content, role FROM chat_message
-        WHERE chatid = {chat_id}
+        WHERE chat_id = {chat_id}
         ORDER BY timestamp ASC;
         """
     )
@@ -190,7 +190,7 @@ def get_openai_response(question, chat_id):
     query = text(
         f"""
         SELECT content, role FROM chat_message  -- Assuming role is also stored in the database
-        WHERE chatid = {chat_id}
+        WHERE chat_id = {chat_id}
         ORDER BY timestamp ASC;
         """
     )
