@@ -76,6 +76,7 @@ def add_message_to_thread(thread_id, role, content, knowledge, messages_array):
     
     Ovo je vaša istorija komunikacije: '''{messages_array}'''
     """
+
     message = client.beta.threads.messages.create(
         thread_id, role=role, content=formatted_content
     )

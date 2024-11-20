@@ -55,7 +55,7 @@ def search_qa_table(question):
 def reformat_answer(answer, chat_id):
     query = text(
         f"""
-        SELECT content FROM chat_message
+        SELECT content, role FROM chat_message
         WHERE id = {chat_id}
         ORDER BY timestamp ASC;
         """
@@ -63,12 +63,10 @@ def reformat_answer(answer, chat_id):
     print(query)
     messages_rows = CHAT_DB_CONNECTION.execute(query).fetchall()
     print(messages_rows)
-    # Convert to array
-    messages_array = [row[0] for row in messages_rows]  # Convert to array
-    print("Fetched messages in format function:", messages_array)  # Debug print
     
-    # Ensure messages_array is JSON serializable
-    messages_array = [str(message) for message in messages_array]  
+    # Convert to array of objects with content and role
+    messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Assuming role is in the second column
+    print("Fetched messages in format function:", messages_array)  # Debug print
     
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -190,20 +188,16 @@ def get_openai_response(question, chat_id):
 
     query = text(
         f"""
-        SELECT content FROM chat_message
+        SELECT content, role FROM chat_message  -- Assuming role is also stored in the database
         WHERE id = {chat_id}
         ORDER BY timestamp ASC;
         """
     )
     messages_rows = CHAT_DB_CONNECTION.execute(query, {"id": chat_id}).fetchall()
     
-    # Convert to array
-    messages_array = [row[0] for row in messages_rows]  
+    # Convert to array of objects with content and role
+    messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Assuming role is in the second column
     print("Fetched messages:", messages_array)  # Debug print
-
-    # Ensure messages_array is JSON serializable
-    # If messages_array contains non-serializable objects, convert them to a serializable format
-    messages_array = [str(message) for message in messages_array]  # Convert to string if necessary
 
     add_message_to_thread(thread.id, "user", question, knowledge, messages_array)
     
