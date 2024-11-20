@@ -17,10 +17,11 @@ async def receive(websocket):
     return response
 
 
-async def send_ping(websocket, interval=20):
+async def send_ping(websocket, interval=10):
     """Send periodic ping frames to keep the WebSocket connection alive."""
     while True:
         try:
+            print("sending ping")
             await websocket.ping()
             await asyncio.sleep(interval)
         except Exception as e:
