@@ -22,7 +22,7 @@ async def send_ping(websocket, interval=10):
     while True:
         try:
             print("sending ping")
-            await websocket.ping()
+            await websocket.send(json.dumps({"ping": "ping"}))
             await asyncio.sleep(interval)
         except Exception as e:
             print(f"Ping failed: {e}")
@@ -39,6 +39,10 @@ async def connect_and_communicate(chat_id):
 
         while True:
             received_django = await receive(django_websocket)
+
+            if "pong" in received_django:
+                continue
+
             if not "text" in received_django:
                 continue
 
