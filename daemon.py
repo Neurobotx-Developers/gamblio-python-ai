@@ -196,8 +196,10 @@ def get_openai_response(question, chat_id):
     messages_rows = CHAT_DB_CONNECTION.execute(query, {"id": chat_id}).fetchall()
     
     # Convert to array of objects with content and role
-    messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Assuming role is in the second column
-    print("Fetched messages:", messages_array)  # Debug print
+    messages_array = []
+    for row in messages_rows:
+        messages_array.append({"content": row[0], "role": row[1]})  # Assuming role is in the second column
+    print("Legacy:", messages_array)  # Debug print
 
     add_message_to_thread(thread.id, "user", question, knowledge, messages_array)
     
