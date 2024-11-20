@@ -41,6 +41,7 @@ async def connect_and_communicate(chat_id):
             received_django = await receive(django_websocket)
 
             if "pong" in received_django:
+                print("got pong")
                 continue
 
             if not "text" in received_django:

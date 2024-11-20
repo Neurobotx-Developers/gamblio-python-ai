@@ -291,6 +291,7 @@ async def client_handler(websocket, path):
             message_data = json.loads(message)  # Parse the message
 
             if "ping" in message_data:
+                print("got ping, sending pong")
                 await websocket.send(json.dumps({"pong": "pong"}))
                 continue
 
