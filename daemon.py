@@ -60,14 +60,11 @@ def reformat_answer(answer, chat_id):
         ORDER BY timestamp ASC;
         """
     )
-    print(query)
     messages_rows = CHAT_DB_CONNECTION.execute(query).fetchall()
-    print(messages_rows)
     
     # Convert to array of objects with content and role
     messages_array = []
     messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Create an array of objects
-    print("Chatovi:", messages_array)  # Debug print
    
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
