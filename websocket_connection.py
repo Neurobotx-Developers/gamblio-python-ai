@@ -2,6 +2,7 @@ import json
 from config import CONFIG
 import websockets
 from websocket import create_connection
+import asyncio
 
 
 async def send(websocket, message):
@@ -25,12 +26,15 @@ async def connect_and_communicate(chat_id):
 
         while True:
             received_django = await receive(django_websocket)
+
             if not "text" in received_django:
                 continue
 
             question = received_django["text"]
 
-            daemon_websocket.send(json.dumps({"question": question, "chat_id":chat_id}))
+            daemon_websocket.send(
+                json.dumps({"question": question, "chat_id": chat_id})
+            )
             daemon_response = json.loads(daemon_websocket.recv())
 
             if daemon_response["data"]["sure"] == False:

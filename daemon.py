@@ -16,7 +16,7 @@ THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
 
-#db za chatove u realnom vremenu
+# db za chatove u realnom vremenu
 CHAT_DB_CONNECTION = CHAT_DB_ENGINE.connect()
 
 
@@ -61,11 +61,23 @@ def reformat_answer(answer, chat_id):
         """
     )
     messages_rows = CHAT_DB_CONNECTION.execute(query).fetchall()
+<<<<<<< HEAD
     
     # Convert to array of objects with content and role
     messages_array = []
     messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Create an array of objects
    
+=======
+    print(messages_rows)
+
+    # Convert to array of objects with content and role
+    messages_array = []
+    messages_array = [
+        {"content": row[0], "role": row[1]} for row in messages_rows
+    ]  # Create an array of objects
+    print("Chatovi:", messages_array)  # Debug print
+
+>>>>>>> 3d462a336f7c70a654f6c0bd0280609550859da0
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -77,15 +89,14 @@ def reformat_answer(answer, chat_id):
                 "role": "user",
                 "content": 'Vi ste korisnički asistent za Admiral Bet Crna Gora, valuta je evro i govorite ijekavicom. Vaš zadatak je da promovišete Admiral Bet i njegove igre i iskljucivo odgovarate na pitanja vezana za Admiral Bet i njegove igre, te da pomažete korisnicima kao da ste stvarna osoba iz korisničke podrške. Nikada ne pominjete druge kladionice. Json odgovor. Format odgovora u JSON-u: {{"sure":true - ako si siguran da mozes dati validan odgovor. / false - ako mislis da na pitanje treba odgovoriti korisnicka podrska, "answer":"" - ako mislis da na to pitanje treba odgovoriti korisnicka podrska/"ili neki tekst ukoliko si nasao odgovor u bazi znanja"}}',
             },
-            
             {
                 "role": "system",
                 "content": "U redu, shvatam. Imate li dodatne instrukcije za moje buduce ponasanje?",
             },
-               {
+            {
                 "role": "user",
                 "content": f"Ovo je vaša istorija razgovora: '''{messages_array}'''",
-            }, 
+            },
             {
                 "role": "system",
                 "content": "U redu, shvatam. Iskoristicu nase prethodne poruke kako bih davao smislene odgovore. Imate li dodatne instrukcije za moje buduce ponasanje?",
@@ -194,14 +205,15 @@ def get_openai_response(question, chat_id):
     messages_rows = CHAT_DB_CONNECTION.execute(query, {"id": chat_id}).fetchall()
     print(f"message rows: {messages_rows}")
     # Convert to array of objects with content and role
-    messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Create an array of objects
+    messages_array = [
+        {"content": row[0], "role": row[1]} for row in messages_rows
+    ]  # Create an array of objects
 
     print("Chatovi:", messages_array)  # Debug print
     print("Legacy:", knowledge)
     add_message_to_thread(thread.id, "user", question, knowledge, messages_array)
-    
+
     # New code to fetch messages from CHAT DB based on chat_id
-    
 
     run = run_assistant(thread.id, assistant.id, assistant.instructions)
     timeout = 60  # seconds
@@ -281,15 +293,19 @@ async def client_handler(websocket, path):
     try:
         async for message in websocket:
             print(f"Received message: {message}")
+
             # Assuming message format is JSON and contains 'chat_id'
             message_data = json.loads(message)  # Parse the message
-            chat_id = message_data.get("chat_id")  # Extract chat_id
-            message_content = message_data.get("question")  # Extract the actual message content
-            
-            message_queue.put((websocket, message_content, chat_id))  # Pass chat_id to the queue
 
-    except websockets.exceptions.ConnectionClosedError:
-        print("Client disconnected")
+            chat_id = message_data.get("chat_id")  # Extract chat_id
+            message_content = message_data.get(
+                "question"
+            )  # Extract the actual message content
+
+            message_queue.put(
+                (websocket, message_content, chat_id)
+            )  # Pass chat_id to the queue
+
     except Exception as e:
         print(f"Error in connection handler: {e}")
 
