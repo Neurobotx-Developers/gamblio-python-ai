@@ -1,6 +1,6 @@
 import requests
 import os
-def send_qa_to_api(question, answer):
+def add_qa_to_database(question, answer):
     url = os.getenv("QA_API_URL")
     body = {
         "question": question,

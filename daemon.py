@@ -10,7 +10,7 @@ from embeddings import calculate_embedding
 from database import DB_ENGINE, CHAT_DB_ENGINE
 from concurrent.futures import ThreadPoolExecutor
 from caluculate_cost import calculate_openai_cost
-import add_qa_to_database
+from add_qa_to_database import add_qa_to_database
 THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
