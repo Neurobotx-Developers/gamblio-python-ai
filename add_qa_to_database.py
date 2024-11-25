@@ -9,7 +9,8 @@ def add_qa_to_database(question, answer):
 
     body = {
         "question": question,
-        "answer": answer_json.answer
+        "answer": answer_json['answer']
     }
     response = requests.post(url, json=body)
+    print(response)
     return response.json()  # Vraća odgovor u JSON formatu
