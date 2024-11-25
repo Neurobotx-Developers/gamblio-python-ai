@@ -43,9 +43,7 @@ def search_qa_table(question):
     for row in rows:
         question, answer = row
 
-        result += f"# Pitanje: {question}\n"
-        result += f"Odgovor: {answer}\n"
-        result += "--------------\n"
+        result += f"{answer}\n"
 
     result += "\n"
     return result
