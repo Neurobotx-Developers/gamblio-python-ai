@@ -1,7 +1,7 @@
 import requests
 import os
 def add_qa_to_database(question, answer):
-    url = os.getenv("QA_API_URL")
+    url = "https://gamblio-back.neurobotx.dev/api/knowledge/add-qa/"
     body = {
         "question": question,
         "answer": answer
