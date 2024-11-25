@@ -18,7 +18,7 @@ global_assistant = {}
 
 
 def create_assistant():
-    file_paths = ["knowlege_files/admiral-bet.txt", "knowlege_files/tipovi-igara.txt", "knowlege_files/vazni_pojmovi.docx"]
+    file_paths = [ "knowlege_files/vazni_pojmovi.docx", "knowlege_files/admiral-bet.txt", "knowlege_files/tipovi-igara.txt"]
     file_ids = []
     for path in file_paths:
         with open(path, "rb") as f:
