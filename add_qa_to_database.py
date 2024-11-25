@@ -3,7 +3,7 @@ import os
 import json
 def add_qa_to_database(question, answer):
     url = "https://gamblio-back.neurobotx.dev/api/knowledge/add-qa/"
-    answer = json.load(answer)
+    answer = json.loads(answer)
     body = {
         "question": question,
         "answer": answer.answer
