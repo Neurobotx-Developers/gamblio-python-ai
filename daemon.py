@@ -254,7 +254,7 @@ def process_message(message, websocket, chat_id):
             #print(response)
             #input_tokens = response.usage.prompt_tokens
             #output_tokens = response.usage.completion_tokens
-            result = json.dumps({"source": "", "cost": {"input":0, "output":0}, "data": answer})
+            result = json.dumps({"source": "", "cost": {"input":0, "output":0}, "data":{"sure":True, "answer":answer}})
 
         else:
             source = "ai"
