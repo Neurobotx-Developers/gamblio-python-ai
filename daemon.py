@@ -249,11 +249,13 @@ def process_message(message, websocket, chat_id):
         
         print(f"QA ANSWER: {answer}")
         if answer.strip() != "":
-            response = reformat_answer(answer, chat_id)
-            answer = json.loads(response.choices[0].message.content)
-            print(response)
-            input_tokens = response.usage.prompt_tokens
-            output_tokens = response.usage.completion_tokens
+            #response = reformat_answer(answer, chat_id)
+            
+            #print(response)
+            #input_tokens = response.usage.prompt_tokens
+            #output_tokens = response.usage.completion_tokens
+            result = json.dumps({"source": "", "cost": {"input":0, "output":0}, "data": answer})
+
         else:
             source = "ai"
             response = get_openai_response(message, chat_id)
@@ -261,9 +263,11 @@ def process_message(message, websocket, chat_id):
             print(response)
             input_tokens = response["input_tokens"]
             output_tokens = response["output_tokens"]
+            calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
+            result = json.dumps({"source": source, "cost": calculated_cost, "data": answer})
 
-        calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
-        result = json.dumps({"source": source, "cost": calculated_cost, "data": answer})
+
+       
 
         asyncio.run(websocket.send(result))
     except Exception as e:
