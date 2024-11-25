@@ -10,7 +10,7 @@ from embeddings import calculate_embedding
 from database import DB_ENGINE, CHAT_DB_ENGINE
 from concurrent.futures import ThreadPoolExecutor
 from caluculate_cost import calculate_openai_cost
-
+import add_qa_to_database
 THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
@@ -262,6 +262,9 @@ def process_message(message, websocket, chat_id):
             input_tokens = response["input_tokens"]
             output_tokens = response["output_tokens"]
             calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
+            
+            add_qa_to_database(message, answer)
+
             result = json.dumps({"source": source, "cost": calculated_cost, "data": answer})
 
 
