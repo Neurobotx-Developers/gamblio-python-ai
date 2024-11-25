@@ -1,8 +1,6 @@
 import json
 from config import CONFIG
 import websockets
-from websocket import create_connection
-import asyncio
 
 
 async def send(websocket, message):
@@ -17,11 +15,8 @@ async def receive(websocket):
     return response
 
 
-async def connect_and_communicate(chat_id):
-    async with websockets.connect(CONFIG["WEBSOCKET_URL"]) as django_websocket:
-        await send(django_websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
-        daemonUri = "ws://localhost:8765"
-        daemon_websocket = create_connection(daemonUri)
+async def handle_daemon_connection(chat_id, django_websocket):
+    async with websockets.connect(CONFIG["DAEMON_WEBSOCKET_URL"]) as daemon_websocket:
         print("Connected to Daemon server")
 
         while True:
@@ -32,10 +27,8 @@ async def connect_and_communicate(chat_id):
 
             question = received_django["text"]
 
-            daemon_websocket.send(
-                json.dumps({"question": question, "chat_id": chat_id})
-            )
-            daemon_response = json.loads(daemon_websocket.recv())
+            await send(daemon_websocket, {"question": question, "chat_id": chat_id})
+            daemon_response = await receive(daemon_websocket)
 
             if daemon_response["data"]["sure"] == False:
                 await send(
@@ -54,3 +47,10 @@ async def connect_and_communicate(chat_id):
                     "cost": daemon_response["cost"],
                 },
             )
+
+
+async def handle_django_connection(chat_id):
+    async with websockets.connect(CONFIG["DJANGO_WEBSOCKET_URL"]) as django_websocket:
+        await send(django_websocket, {"tag": "bot_subscribe", "chat_id": chat_id})
+
+        await handle_daemon_connection(chat_id, django_websocket)
