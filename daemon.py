@@ -1,5 +1,4 @@
 import asyncio
-import websockets
 from queue import Queue
 import time
 import json
