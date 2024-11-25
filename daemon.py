@@ -35,7 +35,7 @@ def search_qa_table(question):
         f"SELECT question, answer FROM qa WHERE question_embedding <-> '{embedding}' < :similarity ORDER BY question_embedding <-> '{embedding}';"
     )
 
-    result = DB_CONNECTION.execute(query, {"similarity": 0.5})
+    result = DB_CONNECTION.execute(query, {"similarity": 0.3})
 
     rows = result.fetchall()
 
