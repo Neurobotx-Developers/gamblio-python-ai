@@ -61,13 +61,6 @@ def reformat_answer(answer, chat_id):
         """
     )
     messages_rows = CHAT_DB_CONNECTION.execute(query).fetchall()
-<<<<<<< HEAD
-    
-    # Convert to array of objects with content and role
-    messages_array = []
-    messages_array = [{"content": row[0], "role": row[1]} for row in messages_rows]  # Create an array of objects
-   
-=======
     print(messages_rows)
 
     # Convert to array of objects with content and role
@@ -77,7 +70,6 @@ def reformat_answer(answer, chat_id):
     ]  # Create an array of objects
     print("Chatovi:", messages_array)  # Debug print
 
->>>>>>> 3d462a336f7c70a654f6c0bd0280609550859da0
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -253,6 +245,9 @@ def process_message(message, websocket, chat_id):
         answer = search_qa_table(
             message
         )  # Changed 'question' to 'message' to match the parameter
+
+
+        
         print(f"QA ANSWER: {answer}")
         if answer.strip() != "":
             response = reformat_answer(answer, chat_id)
