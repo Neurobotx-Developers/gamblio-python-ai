@@ -92,7 +92,7 @@ def reformat_answer(answer, chat_id):
             },
             {
                 "role": "user",
-                "content": "Daj kratke i precizne odgovore. Koristi ijekavski dijalekt crnogorskog jezika. Nikada ne pominji fajl znanja.",
+                "content": "Daj kratke i precizne odgovore. Koristi engleski jezik za odgovaranje. Nikada ne pominji fajl znanja.",
             },
             {
                 "role": "system",
