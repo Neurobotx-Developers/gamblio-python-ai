@@ -112,7 +112,7 @@ def reformat_answer(answer, chat_id):
             },
             {
                 "role": "system",
-                "content": '{"sure":true, "answer":"Ne mogu odgovoriti na to pitanje. Mogu samo odgovarati na pitanja vezana za Admiral BET"}',
+                "content": '{"sure":true, "answer":"I can only answer on questions related to Admiral Bet"}',
             },
             {
                 "role": "user",
