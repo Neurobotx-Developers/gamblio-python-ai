@@ -230,63 +230,78 @@ def get_openai_response(question, chat_id):
     }
 
 
-# Create a queue for incoming messages
+# A queue for incoming messages
 message_queue = Queue()
 
 
-# A placeholder function simulating a long processing task for each message
-def process_message(message, websocket, chat_id):
+def process_message_get_answer(data, websocket):
+    input_tokens = 0
+    output_tokens = 0
+    source = "vector"
+
+    question = data["question"]
+    chat_id = data["chat_id"]
+
+    answer = search_qa_table(question)
+
+    print(f"QA ANSWER: {answer}")
+    if answer.strip() != "":
+        result = json.dumps(
+            {
+                "source": "",
+                "cost": {"input": 0, "output": 0},
+                "data": {"sure": True, "answer": answer},
+            }
+        )
+
+    else:
+        source = "ai"
+        response = get_openai_response(question, chat_id)
+        answer = json.loads(response["answer"])
+        print(response)
+        input_tokens = response["input_tokens"]
+        output_tokens = response["output_tokens"]
+        calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
+
+        add_qa_to_database(question, answer)
+
+        result = json.dumps({"source": source, "cost": calculated_cost, "data": answer})
+
+    asyncio.run(websocket.send(result))
+
+
+def process_message_get_embedding(data, websocket):
+    text = data["text"]
+
+    embedding = calculate_embedding(text)
+
+    asyncio.run(websocket.send(embedding))
+
+
+def process_message(message, websocket):
     try:
-        input_tokens = 0
-        output_tokens = 0
-        source = "vector"
-        answer = search_qa_table(
-            message
-        )  # Changed 'question' to 'message' to match the parameter
+        if (not "tag" in message) or (not "data" in message):
+            print(f"Invalid message, skipping: {message}")
+            return
 
-        print(f"QA ANSWER: {answer}")
-        if answer.strip() != "":
-            # response = reformat_answer(answer, chat_id)
+        tag = message["tag"]
+        data = message["data"]
 
-            # print(response)
-            # input_tokens = response.usage.prompt_tokens
-            # output_tokens = response.usage.completion_tokens
-            result = json.dumps(
-                {
-                    "source": "",
-                    "cost": {"input": 0, "output": 0},
-                    "data": {"sure": True, "answer": answer},
-                }
-            )
-
-        else:
-            source = "ai"
-            response = get_openai_response(message, chat_id)
-            answer = json.loads(response["answer"])
-            print(response)
-            input_tokens = response["input_tokens"]
-            output_tokens = response["output_tokens"]
-            calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
-
-            add_qa_to_database(message, answer)
-
-            result = json.dumps(
-                {"source": source, "cost": calculated_cost, "data": answer}
-            )
-
-        asyncio.run(websocket.send(result))
+        if tag == "get_answer":
+            process_message_get_answer(data, websocket)
+        elif tag == "get_embedding":
+            process_message_get_embedding(data, websocket)
     except Exception as e:
         print(e)
 
 
-# Background task to handle the processing queue
+# Background task to handle processing the queue
 async def handle_queue():
     while True:
         if not message_queue.empty():
-            # Get the next message and its websocket to respond to
-            websocket, message, chat_id = message_queue.get()
+            websocket, message = message_queue.get()
 
-            THREAD_POOL_EXECUTOR.submit(process_message, message, websocket, chat_id)
+            THREAD_POOL_EXECUTOR.submit(process_message, message, websocket)
         else:
             await asyncio.sleep(0.1)  # Avoid busy waiting
 
@@ -297,18 +312,9 @@ async def client_handler(websocket, path):
         async for message in websocket:
             print(f"Received message: {message}")
 
-            # Assuming message format is JSON and contains 'chat_id'
-            message_data = json.loads(message)  # Parse the message
+            message = json.loads(message)
 
-            chat_id = message_data.get("chat_id")  # Extract chat_id
-            message_content = message_data.get(
-                "question"
-            )  # Extract the actual message content
-
-            message_queue.put(
-                (websocket, message_content, chat_id)
-            )  # Pass chat_id to the queue
-
+            message_queue.put((websocket, message))  # Pass chat_id to the queue
     except Exception as e:
         print(f"Error in connection handler: {e}")
 
