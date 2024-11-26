@@ -11,6 +11,7 @@ from database import DB_ENGINE, CHAT_DB_ENGINE
 from concurrent.futures import ThreadPoolExecutor
 from caluculate_cost import calculate_openai_cost
 from add_qa_to_database import add_qa_to_database
+
 THREAD_POOL_EXECUTOR = ThreadPoolExecutor(max_workers=10)
 
 DB_CONNECTION = DB_ENGINE.connect()
@@ -35,7 +36,7 @@ def search_qa_table(question):
         f"SELECT question, answer FROM qa WHERE question_embedding <-> '{embedding}' < :similarity ORDER BY question_embedding <-> '{embedding}';"
     )
 
-    result = DB_CONNECTION.execute(query, {"similarity": 0.3})
+    result = DB_CONNECTION.execute(query, {"similarity": 0.5})
 
     rows = result.fetchall()
 
@@ -243,16 +244,20 @@ def process_message(message, websocket, chat_id):
             message
         )  # Changed 'question' to 'message' to match the parameter
 
-
-        
         print(f"QA ANSWER: {answer}")
         if answer.strip() != "":
-            #response = reformat_answer(answer, chat_id)
-            
-            #print(response)
-            #input_tokens = response.usage.prompt_tokens
-            #output_tokens = response.usage.completion_tokens
-            result = json.dumps({"source": "", "cost": {"input":0, "output":0}, "data":{"sure":True, "answer":answer}})
+            # response = reformat_answer(answer, chat_id)
+
+            # print(response)
+            # input_tokens = response.usage.prompt_tokens
+            # output_tokens = response.usage.completion_tokens
+            result = json.dumps(
+                {
+                    "source": "",
+                    "cost": {"input": 0, "output": 0},
+                    "data": {"sure": True, "answer": answer},
+                }
+            )
 
         else:
             source = "ai"
@@ -262,13 +267,12 @@ def process_message(message, websocket, chat_id):
             input_tokens = response["input_tokens"]
             output_tokens = response["output_tokens"]
             calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
-            
+
             add_qa_to_database(message, answer)
 
-            result = json.dumps({"source": source, "cost": calculated_cost, "data": answer})
-
-
-       
+            result = json.dumps(
+                {"source": source, "cost": calculated_cost, "data": answer}
+            )
 
         asyncio.run(websocket.send(result))
     except Exception as e:
