@@ -22,31 +22,38 @@ async def handle_daemon_connection(chat_id, django_websocket):
         while True:
             received_django = await receive(django_websocket)
 
-            if not "text" in received_django:
+            if not "tag" in received_django:
                 continue
 
-            question = received_django["text"]
+            if received_django["tag"] == "exit_signal":
+                exit(0)
+            elif received_django["tag"] == "bump":
+                if not "text" in received_django:
+                    continue
 
-            await send(daemon_websocket, {"question": question, "chat_id": chat_id})
-            daemon_response = await receive(daemon_websocket)
+                question = received_django["text"]
 
-            if daemon_response["data"]["sure"] == False:
+                await send(daemon_websocket, {"question": question, "chat_id": chat_id})
+                daemon_response = await receive(daemon_websocket)
+
+                if daemon_response["data"]["sure"] == False:
+                    await send(
+                        django_websocket,
+                        {"tag": "bot_cannot_answer", "chat_id": chat_id},
+                    )
+
+                    break
+
                 await send(
-                    django_websocket, {"tag": "bot_cannot_answer", "chat_id": chat_id}
+                    django_websocket,
+                    {
+                        "tag": "bot_send",
+                        "chat_id": chat_id,
+                        "text": daemon_response["data"]["answer"],
+                        "source": daemon_response["source"],
+                        "cost": daemon_response["cost"],
+                    },
                 )
-
-                break
-
-            await send(
-                django_websocket,
-                {
-                    "tag": "bot_send",
-                    "chat_id": chat_id,
-                    "text": daemon_response["data"]["answer"],
-                    "source": daemon_response["source"],
-                    "cost": daemon_response["cost"],
-                },
-            )
 
 
 async def handle_django_connection(chat_id):
