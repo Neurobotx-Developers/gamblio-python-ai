@@ -72,7 +72,7 @@ def add_message_to_thread(thread_id, role, content, knowledge, messages_array):
     formatted_content = f"""
     Odgovori na pitanje: {content}.
 ==================================================
-    Možda ti ovo znanje može pomoći, koristi ga samo kao znanje, a ne kao prethodne poruke: '''{knowledge} '''
+    Možda ti ovo znanje može pomoći, koristi ga samo kao znanje, a ne kao prethodne poruke, ali prioritizuj znanje koje imas u fajlovima znanja: '''{knowledge} '''
 ==================================================
     Ovo je vaša istorija komunikacije: '''{messages_array}'''
     """
