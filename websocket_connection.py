@@ -33,7 +33,13 @@ async def handle_daemon_connection(chat_id, django_websocket):
 
                 question = received_django["text"]
 
-                await send(daemon_websocket, {"question": question, "chat_id": chat_id})
+                await send(
+                    daemon_websocket,
+                    {
+                        "tag": "get_answer",
+                        "data": {"question": question, "chat_id": chat_id},
+                    },
+                )
                 daemon_response = await receive(daemon_websocket)
 
                 if daemon_response["data"]["sure"] == False:
