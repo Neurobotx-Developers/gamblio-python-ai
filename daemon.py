@@ -38,8 +38,8 @@ def search_qa_table(question):
 
     result = DB_CONNECTION.execute(query, {"similarity": 0.8})
 
-    rows = result.first()
-
+    rows = result.fetchall()
+    print(f"result: {result}")
     result = "\n"
     for row in rows:
         question, answer = row
