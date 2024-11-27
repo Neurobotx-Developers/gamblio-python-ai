@@ -148,7 +148,7 @@ def search_legacy_table(question):
         """
     )
 
-    result = DB_CONNECTION.execute(query, {"similarity": 0.8})
+    result = DB_CONNECTION.execute(query, {"similarity": 0.2})
 
     rows = result.fetchall()
 
