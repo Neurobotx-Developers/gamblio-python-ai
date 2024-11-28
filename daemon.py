@@ -248,7 +248,7 @@ def process_message_get_answer(data, websocket):
     if answer.strip() != "":
         result = json.dumps(
             {
-                "source": "",
+                "source": "vector",
                 "cost": {"input": 0, "output": 0},
                 "data": {"sure": True, "answer": answer},
             }
