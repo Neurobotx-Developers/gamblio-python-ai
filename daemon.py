@@ -36,13 +36,17 @@ def search_qa_table(question):
         f"SELECT question, answer FROM qa WHERE question_embedding <-> '{embedding}' < :similarity ORDER BY question_embedding <-> '{embedding}';"
     )
 
-    result = DB_CONNECTION.execute(query, {"similarity": 0.3})
+    result = DB_CONNECTION.execute(query, {"similarity": 0.2})
 
     rows = result.fetchall()
-    print(rows[0])
-    result = f"{rows[0]["answer"]}"
-   
-    
+
+    result = "\n"
+    for row in rows:
+        question, answer = row
+
+        result += f"{answer}\n"
+
+    result += "\n"
     return result
 
 
