@@ -40,7 +40,7 @@ def search_qa_table(question):
 
     rows = result.fetchall()
     print(rows[0])
-    result = f"{rows[0].answer}"
+    result = f"{rows[0]["answer"]}"
    
     
     return result
