@@ -39,8 +39,8 @@ def search_qa_table(question):
     result = DB_CONNECTION.execute(query, {"similarity": 0.3})
 
     rows = result.fetchall()
-
-    result = rows[0]["answer"]
+    print(rows[0])
+    result = f"{rows[0].answer}"
    
     
     return result
