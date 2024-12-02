@@ -38,16 +38,9 @@ def search_qa_table(question):
 
     result = DB_CONNECTION.execute(query, {"similarity": 0.8})
 
-    rows = result.fetchall()
+    _, answer = result.first()
 
-    result = "\n"
-    for row in rows:
-        question, answer = row
-
-        result += f"{answer}\n"
-
-    result += "\n"
-    return result
+    return answer
 
 
 def reformat_answer(answer, chat_id):
