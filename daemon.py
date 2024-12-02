@@ -41,7 +41,7 @@ def search_qa_table(question):
     rows = result.fetchall()
 
     result = "\n"
-    for row in rows[0]:
+    for row in rows:
         question, answer = row
 
         result += f"{answer}\n"
