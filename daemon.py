@@ -37,13 +37,13 @@ def search_qa_table(question):
     )
 
     result = DB_CONNECTION.execute(query, {"similarity": 0.3})
-    first_result = result.first()
 
-    if first_result is None:
-        return None  # or handle it as needed, e.g., return a default answer or raise an exception
+    rows = result.fetchall()
 
-    _, answer = first_result
-    return answer
+    result = rows[0]["answer"]
+   
+    
+    return result
 
 
 def reformat_answer(answer, chat_id):
@@ -231,20 +231,17 @@ message_queue = Queue()
 
 
 def process_message_get_answer(data, websocket):
+    input_tokens = 0
+    output_tokens = 0
+    source = "vector"
+
     question = data["question"]
     chat_id = data["chat_id"]
 
     answer = search_qa_table(question)
 
-    if answer is None:
-        result = json.dumps(
-            {
-                "source": "vector",
-                "cost": {"input": 0, "output": 0},
-                "data": {"sure": False, "answer": "I cannot answer that question."},
-            }
-        )
-    else:
+    print(f"QA ANSWER: {answer}")
+    if answer.strip() != "":
         result = json.dumps(
             {
                 "source": "vector",
@@ -252,6 +249,19 @@ def process_message_get_answer(data, websocket):
                 "data": {"sure": True, "answer": answer},
             }
         )
+
+    else:
+        source = "ai"
+        response = get_openai_response(question, chat_id)
+        answer = json.loads(response["answer"])
+        print(response)
+        input_tokens = response["input_tokens"]
+        output_tokens = response["output_tokens"]
+        calculated_cost = calculate_openai_cost(input_tokens, output_tokens)
+
+        add_qa_to_database(question, answer)
+
+        result = json.dumps({"source": source, "cost": calculated_cost, "data": answer})
 
     asyncio.run(websocket.send(result))
 
