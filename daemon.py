@@ -42,7 +42,7 @@ SELECT question, answer
 FROM EmbeddingDistance
 WHERE distance < %s
 ORDER BY distance;
-"""    )
+"""  )
 
     result = DB_CONNECTION.execute(query, {"similarity": 0.4})
 
