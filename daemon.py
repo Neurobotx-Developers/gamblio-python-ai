@@ -33,10 +33,16 @@ def search_qa_table(question):
     embedding = calculate_embedding(question)
 
     query = text(
-        f"SELECT question, answer FROM qa WHERE question_embedding <-> '{embedding}' < :similarity ORDER BY question_embedding <-> '{embedding}';"
+         f"""
+        SELECT question, answer, question_embedding 
+        FROM qa 
+        WHERE question_embedding <-> :embedding < :similarity
+        ORDER BY question_embedding <-> :embedding
+        LIMIT :top_n;
+        """
     )
 
-    result = DB_CONNECTION.execute(query, {"similarity": 0.2})
+    result = DB_CONNECTION.execute(query, {"similarity": 0.3})
 
     rows = result.fetchall()
 
