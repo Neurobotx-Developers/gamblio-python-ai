@@ -39,15 +39,12 @@ def search_qa_table(question):
     result = DB_CONNECTION.execute(query, {"similarity": 0.4})
 
     rows = result.fetchall()
-    if not rows:  # Check if rows is empty
-        return ""  # Or handle it as needed
 
-    last_index = len(rows) - 1
-    result = rows[last_index].answer
-    """ for row in rows:
+    result = "\n"
+    for row in rows:
         question, answer = row
 
-        result += f"{answer}\n" """
+        result += f"{answer}\n"
 
     result += "\n"
     return result
