@@ -39,8 +39,9 @@ def search_qa_table(question):
     result = DB_CONNECTION.execute(query, {"similarity": 0.6})
 
     rows = result.fetchall()
-
-    result = rows[rows.lenght - 1].answer
+    last_index = len(rows) - 1 if rows else -1
+ 
+    result = rows[last_index].answer
     """ for row in rows:
         question, answer = row
 
