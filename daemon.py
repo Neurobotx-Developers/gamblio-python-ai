@@ -40,11 +40,11 @@ def search_qa_table(question):
 
     rows = result.fetchall()
 
-    result = "\n"
-    for row in rows:
+    result = rows[0].answer
+    """ for row in rows:
         question, answer = row
 
-        result += f"{answer}\n"
+        result += f"{answer}\n" """
 
     result += "\n"
     return result
