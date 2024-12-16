@@ -40,7 +40,7 @@ def search_qa_table(question):
 
     rows = result.fetchall()
     if not rows:  # Check if rows is empty
-        return "No answer found in Vector Database."  # Or handle it as needed
+        return ""  # Or handle it as needed
 
     last_index = len(rows) - 1
     result = rows[last_index].answer
